@@ -14,10 +14,11 @@ logger = logging.getLogger(__name__)
 def voice(update, context):
     """Send a audio command /start is issued."""
     voice = update.message.voice
+    message_id = str(update.message.message_id)
     voiceFile = voice.get_file()
-    voice_file_ogg = 'voice.ogg'
+    voice_file_ogg = "voice-" + message_id + ".ogg"
     interim_ogg_file = "temp-" + voice_file_ogg
-    voice_file_wav = 'voice.wav'
+    voice_file_wav = "voice-" + message_id + ".wav"
     voiceFile.download(voice_file_ogg)
     subprocess.run(["ffmpeg.exe", "-i", voice_file_ogg, "-c:a", "libvorbis", "-ab", "32k", "-ar", "16000", interim_ogg_file])
     subprocess.run(["ffmpeg.exe", "-i", interim_ogg_file, voice_file_wav])

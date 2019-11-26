@@ -16,7 +16,7 @@ client = speech.SpeechClient(credentials=credentials)
 config = types.RecognitionConfig(
     encoding=enums.RecognitionConfig.AudioEncoding.LINEAR16,
     sample_rate_hertz=16000,
-    language_code='ta-IN',
+    language_code='en-GB',
     enable_automatic_punctuation=True
 )
 
