@@ -1,15 +1,18 @@
 import logging
 import os
-import GoogleSpeechToText as trans
 import subprocess
+import GoogleSpeechToText as Trans
 
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackQueryHandler
+
 
 # Enable logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+lang = 'en-IN'
 
 def voice(update, context):
     """Send a audio command /start is issued."""
@@ -20,19 +23,22 @@ def voice(update, context):
     interim_ogg_file = "temp-" + voice_file_ogg
     voice_file_wav = "voice-" + message_id + ".wav"
     voiceFile.download(voice_file_ogg)
-    subprocess.run(["ffmpeg.exe", "-i", voice_file_ogg, "-c:a", "libvorbis", "-ab", "32k", "-ar", "16000", interim_ogg_file])
+    subprocess.run(
+        ["ffmpeg.exe", "-i", voice_file_ogg, "-c:a", "libvorbis", "-ab", "32k", "-ar", "16000", interim_ogg_file])
     subprocess.run(["ffmpeg.exe", "-i", interim_ogg_file, voice_file_wav])
-    transcribed_text = trans.transcribe(voice_file_wav)
+    transcribed_text = Trans.transcribe(voice_file_wav, lang)
     update.message.reply_text(transcribed_text)
     os.remove(voice_file_wav)
     os.remove(voice_file_ogg)
     os.remove(interim_ogg_file)
 
+
 # Define a few command handlers. These usually take the two arguments update and
 # context. Error handlers also receive the raised TelegramError object in error.
 def start(update, context):
     """Send a message when the command /start is issued."""
-    update.message.reply_text('Hi!')
+    update.message.reply_text('Hi! Dubakoor is your language translator. Currently supporting English - US . Record a '
+                              'voice message in English and try how Dubakoor gives you results')
 
 
 def help(update, context):
@@ -50,6 +56,25 @@ def error(update, context):
     logger.warning('Update "%s" caused error "%s"', update, context.error)
 
 
+def language(update, context):
+    keyboard = [[InlineKeyboardButton("English", callback_data='en-US'),
+                 InlineKeyboardButton("Tamil", callback_data='ta-IN')],
+
+                [InlineKeyboardButton("Hindi", callback_data='hi-IN'),
+                InlineKeyboardButton("French", callback_data='fr-FR')]]
+
+    reply_markup = InlineKeyboardMarkup(keyboard)
+
+    update.message.reply_text('Please choose the Language :', reply_markup=reply_markup)
+
+
+def button(update, context):
+    query = update.callback_query
+    query.edit_message_text(text="Selected option: {}".format(query.data))
+    global lang
+    lang = query.data
+
+
 def main():
     """Start the bot."""
     # Create the Updater and pass it your bot's token.
@@ -57,7 +82,6 @@ def main():
     # Post version 12 this will no longer be necessary
 
     telegram_bot_token = os.environ.get("TELEGRAM_BOT_TOKEN")
-
     updater = Updater(telegram_bot_token, use_context=True)
 
     # Get the dispatcher to register handlers
@@ -65,7 +89,10 @@ def main():
 
     # on different commands - answer in Telegram
     dp.add_handler(CommandHandler("start", start))
+    dp.add_handler(CommandHandler("Language",language))
+    updater.dispatcher.add_handler(CallbackQueryHandler(button))
     dp.add_handler(CommandHandler("help", help))
+
 
     # on noncommand i.e message - echo the message on Telegram
     dp.add_handler(MessageHandler(Filters.text, echo))
