@@ -17,11 +17,13 @@ lang = 'en-IN'
 def voice(update, context):
     """Send a audio command /start is issued."""
     voice = update.message.voice
+    chat_id = str(update.message.chat_id)
     message_id = str(update.message.message_id)
+    ##chat_id = str(update.message.
     voiceFile = voice.get_file()
-    voice_file_ogg = "voice-" + message_id + ".ogg"
+    voice_file_ogg = "voice-" + message_id + chat_id + ".ogg"
     interim_ogg_file = "temp-" + voice_file_ogg
-    voice_file_wav = "voice-" + message_id + ".wav"
+    voice_file_wav = "voice-" + message_id + chat_id + ".wav"
     voiceFile.download(voice_file_ogg)
     subprocess.run(
         ["ffmpeg.exe", "-i", voice_file_ogg, "-c:a", "libvorbis", "-ab", "32k", "-ar", "16000", interim_ogg_file])
@@ -37,8 +39,9 @@ def voice(update, context):
 # context. Error handlers also receive the raised TelegramError object in error.
 def start(update, context):
     """Send a message when the command /start is issued."""
-    update.message.reply_text('Hi! Dubakoor is your language translator. Currently supporting English - US . Record a '
-                              'voice message in English and try how Dubakoor gives you results')
+    update.message.reply_text('Hi! Dubakoor is your speech to text converter for 120 languages. Record a '
+                              'voice message and try how Dubakoor gives you results'
+                              'Selections : /language - To select the language ')
 
 
 def help(update, context):
